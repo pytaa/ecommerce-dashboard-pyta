@@ -5,9 +5,12 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
 
 # Load Dataset
-df = pd.read_csv("all_data.csv")
+current_dir = os.path.dirname(os.path.realpath(__file__))
+file_path = os.path.join(current_dir, "all_data.csv")
+df = pd.read_csv(file_path)
 df['order_purchase_timestamp'] = pd.to_datetime(df['order_purchase_timestamp'])
 
 # sidebar
