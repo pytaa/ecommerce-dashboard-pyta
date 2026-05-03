@@ -69,6 +69,7 @@ else:
         ax.axhline(0, color='red', linestyle='--') 
         ax.set_title("Rata-rata Keterlambatan Pengiriman per Bulan", fontsize=15)
         ax.set_ylabel("Selisih Hari (Minus = Lebih Cepat)")
+        plt.xticks(rotation=45, ha='right')
         st.pyplot(fig_logistics)
     else:
         st.info("Tidak ada pesanan dari Sao Paulo pada rentang waktu ini.")
@@ -78,16 +79,31 @@ else:
     heavy_df = main_df[main_df['product_weight_g'] > 7000]
     
     if not heavy_df.empty:
+        # Agregasi data
         seller_res = heavy_df.groupby('seller_id').agg({'review_score': 'mean', 'order_id': 'nunique'}).reset_index()
-        top_sellers = seller_res[seller_res['review_score'] > 4.0].sort_values(by='order_id', ascending=False).head(10)
+        top_sellers = seller_res[seller_res['review_score'] > 4.0].sort_values(by='order_id', ascending=False).head(10).copy()
         
         if not top_sellers.empty:
+            # 1. Membuat mapping nama seller (Seller 1, Seller 2, dst)
+            seller_names = [f'Seller {i+1}' for i in range(len(top_sellers))]
+            top_sellers['seller_id_short'] = seller_names
+
             fig_sellers, ax = plt.subplots(figsize=(10, 6))
-            colors = ["#90CAF9"] + ["#D3D3D3"] * 9
-            sns.barplot(x='order_id', y='seller_id', data=top_sellers, palette=colors, hue='seller_id', legend=False, ax=ax)
-            ax.set_title("Top 10 Sellers untuk Produk Berat (>7kg)", fontsize=15)
-            ax.set_xlabel("Jumlah Pesanan")
-            ax.set_ylabel("Seller ID")
+            
+            # 2. Visualisasi dengan palette 'Blues_r'
+            sns.barplot(
+                x='order_id', 
+                y='seller_id_short', 
+                data=top_sellers, 
+                palette='Blues_r', 
+                hue='seller_id_short', 
+                legend=False, 
+                ax=ax
+            )
+            ax.set_title("Top 10 Sellers Barang Berat (>7kg) dengan Skor > 4.0", fontsize=15, pad=15)
+            ax.set_xlabel("Jumlah Pesanan yang Berhasil", fontsize=12)
+            ax.set_ylabel("Seller", fontsize=12)
+            
             st.pyplot(fig_sellers)
         else:
             st.info("Tidak ada seller yang memenuhi kriteria (Skor > 4.0) pada rentang waktu ini.")
