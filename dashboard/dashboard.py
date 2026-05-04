@@ -72,7 +72,7 @@ else:
         sp_df['order_delivered_customer_date'] = pd.to_datetime(sp_df['order_delivered_customer_date'])
         sp_df['order_estimated_delivery_date'] = pd.to_datetime(sp_df['order_estimated_delivery_date'])
         
-        # Perhitungan Pure Delay sesuai Notebook
+        # Perhitungan Pure Delay
         sp_df['delivery_margin_days'] = (sp_df['order_delivered_customer_date'] - sp_df['order_estimated_delivery_date']).dt.days
         sp_df['pure_delay_days'] = sp_df['delivery_margin_days'].clip(lower=0)
         sp_df['purchase_month'] = sp_df['order_purchase_timestamp'].dt.month
@@ -85,37 +85,39 @@ else:
             total_order_cases=('order_id', 'nunique')
         ).reset_index()
         
-        # Filter N > 30 agar tidak misleading
-        top_10_filtered = category_analysis[category_analysis['total_order_cases'] >= 30] \
+        # SOLUSI 1: Turunkan filter minimum pesanan menjadi 10 agar bar yang muncul lebih banyak
+        top_10_filtered = category_analysis[category_analysis['total_order_cases'] >= 10] \
             .sort_values(by='avg_delay_days', ascending=False).head(10)
 
-        # Plotting 2 visualisasi
-        fig_logistics, ax = plt.subplots(nrows=2, ncols=1, figsize=(14, 12))
+        # SOLUSI 2: Ubah figsize menjadi (12, 8) agar lebih pipih dan tidak menuhi layar
+        fig_logistics, ax = plt.subplots(nrows=2, ncols=1, figsize=(12, 8))
         
         # Plot 1: Line Chart
         sns.lineplot(x='purchase_month', y='pure_delay_days', data=monthly_trend, 
                      marker='o', color='crimson', linewidth=2.5, markersize=8, ax=ax[0])
-        ax[0].set_title('Tren Rata-rata Keterlambatan Murni di Sao Paulo', fontsize=15, pad=15, fontweight='bold')
-        ax[0].set_xlabel('Bulan Pembelian', fontsize=12)
-        ax[0].set_ylabel('Rata-rata Terlambat (Hari)', fontsize=12)
+        ax[0].set_title('Tren Rata-rata Keterlambatan Murni di Sao Paulo', fontsize=14, pad=10, fontweight='bold')
+        ax[0].set_xlabel('Bulan Pembelian', fontsize=10)
+        ax[0].set_ylabel('Rata-rata Terlambat (Hari)', fontsize=10)
         ax[0].grid(axis='y', linestyle='--', alpha=0.7)
         
         # Plot 2: Bar Chart
         if not top_10_filtered.empty:
             sns.barplot(x='avg_delay_days', y='product_category_name', data=top_10_filtered,
                         palette='Reds_r', hue='product_category_name', legend=False, ax=ax[1])
-            ax[1].set_title('Top 10 Kategori Produk dengan Rata-rata Keterlambatan Terburuk (Min. 30 Pesanan)', fontsize=15, pad=15, fontweight='bold')
-            ax[1].set_xlabel('Rata-rata Keterlambatan (Hari)', fontsize=12)
-            ax[1].set_ylabel('Kategori Produk', fontsize=12)
+            ax[1].set_title('Top 10 Kategori Produk dengan Keterlambatan Terburuk (Min. 10 Pesanan)', fontsize=14, pad=10, fontweight='bold')
+            ax[1].set_xlabel('Rata-rata Keterlambatan (Hari)', fontsize=10)
+            ax[1].set_ylabel('Kategori Produk', fontsize=10)
             
             for p in ax[1].patches:
                 ax[1].annotate(f' {p.get_width():.1f} Hari', (p.get_width(), p.get_y() + p.get_height() / 2.),
-                               ha='left', va='center', xytext=(5, 0), textcoords='offset points', fontsize=11)
+                               ha='left', va='center', xytext=(5, 0), textcoords='offset points', fontsize=10)
             ax[1].set_xlim(0, top_10_filtered['avg_delay_days'].max() * 1.2)
         else:
-            ax[1].set_title("Tidak ada data kategori dengan jumlah pesanan >= 30", fontsize=12)
+            ax[1].set_title("Tidak ada data kategori dengan jumlah pesanan >= 10", fontsize=12)
 
-        plt.tight_layout()
+        # Menambahkan spasi antar grafik agar tidak berdempetan
+        plt.subplots_adjust(hspace=0.4)
+        
         st.pyplot(fig_logistics)
     else:
         st.info("Tidak ada pesanan dari Sao Paulo pada rentang waktu ini.")
@@ -213,7 +215,7 @@ else:
                 revenue_val = p.get_width()
                 avg_rev = problematic_cats['avg_review_score'].iloc[i]
                 ax.annotate(
-                    f' R$ {revenue_val:,.2f}  |  Avg ⭐: {avg_rev:.2f}', 
+                    f' R$ {revenue_val:,.2f}  |  Avg ★: {avg_rev:.2f}', 
                     (revenue_val, p.get_y() + p.get_height() / 2.),
                     ha='left', va='center', xytext=(10, 0), textcoords='offset points',
                     fontsize=12, fontweight='medium', color='#333333'
