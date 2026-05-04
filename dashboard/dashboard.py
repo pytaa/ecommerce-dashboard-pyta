@@ -20,9 +20,9 @@ with st.sidebar:
     ## Filter rentang waktu
     start_date, end_date = st.date_input(
         label = 'Rentang Waktu Pemesanan',
-        min_value = df['order_purchase_timestamp'].min().date(),
+        min_value = datetime.date(2018, 1, 1),
         max_value = df['order_purchase_timestamp'].max().date(),
-        value = [df['order_purchase_timestamp'].min().date(), df['order_purchase_timestamp'].max().date()]
+        value = [datetime.date(2018, 1, 1), df['order_purchase_timestamp'].max().date()]
     )
 
 # main page
